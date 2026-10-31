@@ -1,4 +1,4 @@
-デプロイURL：（谷口が貼る）
+デプロイURL：https://script.google.com/macros/s/AKfycbxWlyQBpNFqt4cv-YqEqZh3zH_S58TE1ry_ZUyfPLTUzKTCE_BhukwiDVdrpQunyJWQ/exec
 
 # 返信ボード（Apps Script＋GitHub Pages 版）のつくり方
 
