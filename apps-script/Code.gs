@@ -465,3 +465,55 @@ function ss_() {
   if (!id) throw new Error("スプレッドシートが見つかりません。StoreSeed.gs の SHEET_ID にスプレッドシートのIDを入れてください。");
   return SpreadsheetApp.openById(id);
 }
+
+// ───────── メール通知（新しい「未対応」が入ったら、config の notifyEmails に知らせる） ─────────
+// 送るのは日本時間 6:00~21:59 だけ。夜（22時~翌6時）に入った分は、朝6時台にまとめて1通。
+// Claude（巡回）が止まっていても、ボードに入った時点でこの仕組みが送ります。
+const NOTIFY_START_HOUR = 6;
+const NOTIFY_END_HOUR = 22;
+
+/** 1時間ごとに自動で動きます（installNotify で登録）。 */
+function notifyNew() {
+  const hour = Number(Utilities.formatDate(new Date(), "Asia/Tokyo", "H"));
+  if (hour < NOTIFY_START_HOUR || hour >= NOTIFY_END_HOUR) return;
+  const cfg = readConfig_();
+  const to = String(cfg.notifyEmails || "").split(/[,\s、]+/).filter(s => /@/.test(s));
+  if (!to.length) return;
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(20000)) return;
+  try {
+    const t = loadTable_("items");
+    const fresh = Object.keys(t.byId).map(id => t.byId[id]).filter(r => {
+      const o = r.obj;
+      return String(o.status) === "未対応" && !o.mailNotified;
+    });
+    if (!fresh.length) return;
+    const name = cfg.storeName || "お店";
+    const board = cfg.boardUrl || "";
+    const lines = fresh.slice(0, 20).map(r => {
+      const o = r.obj;
+      const head = String(o.comment || "").replace(/\s+/g, " ").slice(0, 30);
+      const dm = String(o.isDM) === "true" || o.isDM === true ? " DM" : "";
+      const warn = String(o.blockSuggest) === "true" || o.blockSuggest === true ? " ⚠ブロック推奨" : "";
+      return "・" + (o.source || "") + dm + " " + (o.author || "") + "さん" + warn + "「" + head + (String(o.comment || "").length > 30 ? "…" : "") + "」";
+    });
+    if (fresh.length > 20) lines.push("ほか " + (fresh.length - 20) + " 件");
+    const subject = "【" + name + "】返信が必要なコメントが" + fresh.length + "件あります";
+    const body = "返信が必要なコメントが" + fresh.length + "件届いています。\n\n" + lines.join("\n") +
+      "\n\n返信ボードを開く\n" + board +
+      "\n\n（このメールは自動で送っています。返信ボードで「投稿」か「投稿しない」を押せば、次からは届きません）";
+    MailApp.sendEmail({ to: to.join(","), subject: subject, body: body, name: name + " 返信ボード" });
+    const now = new Date().toISOString();
+    fresh.forEach(r => { r.obj = Object.assign({}, r.obj, { mailNotified: now }); r.changed = true; });
+    commitTable_(t);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/** 1回だけ実行：notifyNew を1時間ごとに動かす設定を入れます（何回実行しても1つだけ）。 */
+function installNotify() {
+  ScriptApp.getProjectTriggers().filter(tr => tr.getHandlerFunction() === "notifyNew").forEach(tr => ScriptApp.deleteTrigger(tr));
+  ScriptApp.newTrigger("notifyNew").timeBased().everyHours(1).create();
+  Logger.log("メール通知を登録しました。送り先は config シートの notifyEmails です。");
+}
