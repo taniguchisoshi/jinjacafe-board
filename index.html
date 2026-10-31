@@ -117,8 +117,8 @@ button.danger{background:var(--bad);color:#fff;border-color:var(--bad)}
     const k=akey(d); return allDocs.filter(x=>x.id!==d.id&&akey(x)===k).sort((a,b)=>String(a.commentDate||a.createdAt||"").localeCompare(String(b.commentDate||b.createdAt||"")));
   }
   function visitBadge(d){
-    const h=history(d); const n=h.length+1;
-    return n===1?`<span class="badge first">初コメント</span>`:`<span class="badge rep">${n}回目</span>`;
+    const h=history(d); const key=String(d.commentDate||d.createdAt||""); const before=h.filter(x=>String(x.commentDate||x.createdAt||"")<=key).length; const n=before+1; const total=h.length+1;
+    return n===1?`<span class="badge first">初コメント</span>`:`<span class="badge rep">${n}回目${total>n?"（全"+total+"回）":""}</span>`;
   }
   function historyBlock(d){
     const h=history(d); if(!h.length)return "";
