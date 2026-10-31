@@ -51,6 +51,13 @@ h2{font-size:12px;letter-spacing:.08em;color:var(--muted);margin:6px 0 0;font-we
 .thread .t.mine{color:var(--ok)}
 .thread .t b{color:var(--ink);font-weight:700}
 .meta .late{color:var(--warn);font-weight:700}
+.badge{font-size:11px;font-weight:700;padding:1px 8px;border-radius:999px;border:1px solid transparent}
+.badge.first{background:var(--accent-soft);color:var(--accent)}
+.badge.rep{background:var(--ok-soft);color:var(--ok)}
+.hist{border-left:3px solid var(--line);padding:0 0 0 12px;display:flex;flex-direction:column;gap:8px;font-size:13px;margin-top:6px}
+.hist .h{color:var(--muted);white-space:pre-wrap;word-break:break-word}
+.hist .h b{color:var(--ink)}
+.hist .h .r{color:var(--ok);display:block;margin-top:2px}
 .stars{color:#d59f00;letter-spacing:1px}
 .label{font-size:11px;letter-spacing:.06em;color:var(--muted);font-weight:700;margin-bottom:3px}
 .comment{background:var(--quote);border-left:3px solid var(--line);padding:8px 12px;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow:auto;font-size:14px}
@@ -105,6 +112,20 @@ button.danger{background:var(--bad);color:#fff;border-color:var(--bad)}
   const ui={}; let docs=[], blocks=[], cfg={}, SRC={}, filter="すべて", K="", loading=false, pending=false, helloDone=false, timer=null;
   const TODO=["未対応"], BUSY=["投稿待ち","投稿中","失敗"], DONE=["投稿済み","投稿しない","ブロック"];
   const akey=d=>(d.source||"")+"|"+String(d.authorId||d.author||"").trim().toLowerCase();
+  let allDocs=[];
+  function history(d){ // 同じ人（同じ媒体）の他のコメント。古い順
+    const k=akey(d); return allDocs.filter(x=>x.id!==d.id&&akey(x)===k).sort((a,b)=>String(a.commentDate||a.createdAt||"").localeCompare(String(b.commentDate||b.createdAt||"")));
+  }
+  function visitBadge(d){
+    const h=history(d); const n=h.length+1;
+    return n===1?`<span class="badge first">初コメント</span>`:`<span class="badge rep">${n}回目</span>`;
+  }
+  function historyBlock(d){
+    const h=history(d); if(!h.length)return "";
+    const me=storeName()||"お店";
+    const st=x=>x.status==="投稿済み"?(x.finalText?`<span class="r">${esc(me)}の返信：${esc(x.finalText)}</span>`:""):x.status==="投稿しない"?`<span class="r">（返信なし）</span>`:x.status==="ブロック"?`<span class="r">（ブロック）</span>`:`<span class="r">（返信は未対応）</span>`;
+    return `<details><summary>この人の過去のやりとり（${h.length}件）</summary><div class="hist">${h.map(x=>`<div class="h"><b>${esc(x.commentDate||"")}</b>${x.source!==d.source?"　"+esc(x.source):""}<br>${esc(x.comment||"")}${st(x)}</div>`).join("")}</div></details>`;
+  }
   const blockOf=d=>blocks.find(b=>b.key===akey(d)&&b.status!=="解除済み");
   function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
   function color(s){s=String(s||"").trim();return /^#[0-9a-fA-F]{3,8}$/.test(s)?s:""}
@@ -155,7 +176,7 @@ button.danger{background:var(--bad);color:#fff;border-color:var(--bad)}
     try{
       const res=await apiGet({api:"board",limit:500});
       if(!res.ok){if(res.code===401){locked();return}throw new Error(res.error||"")}
-      docs=res.items||[]; blocks=res.blocks||[]; applyConfig(res.config||{});
+      docs=res.items||[]; allDocs=docs; blocks=res.blocks||[]; applyConfig(res.config||{});
       if(editing())pending=true; else render();
       if(!helloDone){helloDone=true;const page=location.origin+location.pathname;if(location.protocol==="https:"&&cfg.pageUrl!==page)apiPost({api:"hello",page}).catch(()=>{})}
     }catch(e){
@@ -206,13 +227,13 @@ button.danger{background:var(--bad);color:#fff;border-color:var(--bad)}
     const r=Math.max(0,Math.min(5,parseInt(d.rating,10)||0));
     const stars=r?`<span class="stars">${"★".repeat(r)}${"☆".repeat(5-r)}</span>`:"";
     const link=/^https?:\/\//.test(d.postUrl||"")?`<a class="link" href="${esc(d.postUrl)}" target="_blank" rel="noopener noreferrer">元の投稿を開く</a>`:"";
-    return `<div class="meta">${srcChip(d.source)}<span class="who">${esc(d.author||"")}</span>${stars}<span>${esc(d.commentDate||"")}</span>${late}${link}</div>`;
+    return `<div class="meta">${srcChip(d.source)}<span class="who">${esc(d.author||"")}</span>${visitBadge(d)}${stars}<span>${esc(d.commentDate||"")}</span>${late}${link}</div>`;
   }
   function comment(d){
     const me=storeName()||"お店";
     const th=Array.isArray(d.thread)&&d.thread.length?`<details><summary>これまでのやりとり（${d.thread.length}件）</summary><div class="thread">${d.thread.map(t=>`<div class="t ${t.mine?"mine":""}"><b>${esc(t.mine?me:(t.author||""))}</b> ${esc(t.date||"")}<br>${esc(t.text||"")}</div>`).join("")}</div></details>`:"";
     const lab=d.source==="Google口コミ"?"口コミ":d.source==="メール"?"メール本文":"コメント";
-    return `<div><div class="label">${lab}${d.postTitle?"（"+esc(d.postTitle)+"）":""}${d.isFollowup?"　<span class=\"src\">追加コメント</span>":""}</div>${th}<div class="comment">${esc(d.comment)}</div></div>`}
+    return `<div><div class="label">${lab}${d.postTitle?"（"+esc(d.postTitle)+"）":""}${d.isFollowup?"　<span class=\"src\">追加コメント</span>":""}</div>${th}<div class="comment">${esc(d.comment)}</div>${historyBlock(d)}</div>`}
   function cardTodo(d){
     const s=ui[d.id]||{mode:"view"}; let body;
     if(s.mode==="edit") body=`<div><div class="label">返信文を直す</div><textarea id="ta-${esc(d.id)}" data-id="${esc(d.id)}">${esc(s.text??d.draft)}</textarea></div><div class="actions"><button class="primary" data-act="ask" data-id="${esc(d.id)}" data-from="edit">投稿</button><button class="ghost" data-act="cancel" data-id="${esc(d.id)}">やめる</button></div>`;
