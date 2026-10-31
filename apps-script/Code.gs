@@ -467,15 +467,14 @@ function ss_() {
 }
 
 // ───────── メール通知（新しい「未対応」が入ったら、config の notifyEmails に知らせる） ─────────
-// 送るのは日本時間 6:00~21:59 だけ。夜（22時~翌6時）に入った分は、朝6時台にまとめて1通。
-// Claude（巡回）が止まっていても、ボードに入った時点でこの仕組みが送ります。
-const NOTIFY_START_HOUR = 6;
-const NOTIFY_END_HOUR = 22;
+// 送るのは1日3回（日本時間 7時台・13時台・20時台）だけ。その間に入った分をまとめて1通。夜22時~朝6時は送らない。
+// Claude（巡回）が止まっていても、ボードに入っていればこの仕組みが送ります。
+const NOTIFY_HOURS = [7, 13, 20];
 
 /** 1時間ごとに自動で動きます（installNotify で登録）。 */
 function notifyNew() {
   const hour = Number(Utilities.formatDate(new Date(), "Asia/Tokyo", "H"));
-  if (hour < NOTIFY_START_HOUR || hour >= NOTIFY_END_HOUR) return;
+  if (NOTIFY_HOURS.indexOf(hour) < 0) return;
   const cfg = readConfig_();
   const to = String(cfg.notifyEmails || "").split(/[,\s、]+/).filter(s => /@/.test(s));
   if (!to.length) return;
