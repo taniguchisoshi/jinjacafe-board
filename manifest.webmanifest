@@ -1,12 +1,12 @@
 {
   "name": "神社カフェ 返信ボード",
   "short_name": "返信ボード",
-  "start_url": "./",
+  "lang": "ja",
   "display": "standalone",
   "background_color": "#f6f4f1",
   "theme_color": "#E43426",
   "icons": [
-    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
-    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"}
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
   ]
 }

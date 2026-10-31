@@ -2,17 +2,297 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>神社カフェ 返信ボード</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="返信ボード">
+<meta name="theme-color" content="#f6f4f1" id="themeMeta">
+<title>返信ボード</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="icon" href="icon-192.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="返信ボード">
-<meta name="theme-color" content="#E43426">
-<style>body{margin:0;font-family:-apple-system,"Hiragino Kaku Gothic ProN",sans-serif;background:#f6f4f1;color:#1a1a1a;display:flex;min-height:100vh;align-items:center;justify-content:center;text-align:center;padding:24px}img{width:96px;height:96px;border-radius:50%;background:#fff;border:1px solid #e2ddd7}p{color:#6b6560;font-size:14px}</style>
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+:root{--brand:#E43426;--bg:#f6f4f1;--surface:#fff;--ink:#1a1a1a;--muted:#6b6560;--line:#e2ddd7;--accent:#E43426;--accent-ink:#fff;--accent-soft:#fbe9e6;--quote:#faf7f3;--warn:#9a5b00;--warn-soft:#fbf1e1;--bad:#a3322a;--bad-soft:#f8e6e4;--ok:#1f6f5c;--ok-soft:#e3efeb;--font:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17191b;--surface:#212427;--ink:#ebe7e2;--muted:#a39d96;--line:#33383c;--accent:#f0675b;--accent-ink:#1a1a1a;--accent-soft:#3a2522;--quote:#1b1e20;--warn:#e7b25c;--warn-soft:#3a2d17;--bad:#ef8a80;--bad-soft:#3d2220;--ok:#5fbfa3;--ok-soft:#1f3a33;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#17191b;--surface:#212427;--ink:#ebe7e2;--muted:#a39d96;--line:#33383c;--accent:#f0675b;--accent-ink:#1a1a1a;--accent-soft:#3a2522;--quote:#1b1e20;--warn:#e7b25c;--warn-soft:#3a2d17;--bad:#ef8a80;--bad-soft:#3d2220;--ok:#5fbfa3;--ok-soft:#1f3a33;color-scheme:dark}
+/* テーマ色（config の themeColor）を --brand に入れて、強調色をそこから作ります */
+@supports (color:color-mix(in srgb,red,blue)){
+:root{--accent:var(--brand);--accent-soft:color-mix(in srgb,var(--brand) 12%,#fff)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--accent:color-mix(in srgb,var(--brand) 70%,#fff);--accent-soft:color-mix(in srgb,var(--brand) 22%,#212427)}}
+:root[data-theme="dark"]{--accent:color-mix(in srgb,var(--brand) 70%,#fff);--accent-soft:color-mix(in srgb,var(--brand) 22%,#212427)}
+}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.7;-webkit-text-size-adjust:100%}
+.wrap{max-width:720px;margin:0 auto;padding:max(12px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 60px max(16px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:14px}
+header{display:flex;align-items:center;gap:10px}
+header img{width:36px;height:36px;border-radius:50%;background:#fff;border:1px solid var(--line);flex:0 0 auto}
+header .grow{flex:1;min-width:0}
+header h1{font-size:18px;margin:0;font-weight:700}
+header p{margin:0;color:var(--muted);font-size:12px}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;font-size:13px;font-weight:700;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer;white-space:nowrap;min-height:0}
+.tab.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.counts{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:12px;padding:2px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);font-variant-numeric:tabular-nums}
+.chip.on{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:700}
+h2{font-size:12px;letter-spacing:.08em;color:var(--muted);margin:6px 0 0;font-weight:700}
+.list{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.meta{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;font-size:12px;color:var(--muted)}
+.meta .who{font-size:15px;font-weight:700;color:var(--ink)}
+.src{font-size:11px;font-weight:700;padding:1px 8px;border-radius:999px;background:var(--quote);border:1px solid var(--line);color:var(--ink)}
+.thread{border-left:3px solid var(--line);padding:0 0 0 12px;display:flex;flex-direction:column;gap:6px;font-size:13px}
+.thread .t{color:var(--muted);white-space:pre-wrap;word-break:break-word}
+.thread .t.mine{color:var(--ok)}
+.thread .t b{color:var(--ink);font-weight:700}
+.meta .late{color:var(--warn);font-weight:700}
+.stars{color:#d59f00;letter-spacing:1px}
+.label{font-size:11px;letter-spacing:.06em;color:var(--muted);font-weight:700;margin-bottom:3px}
+.comment{background:var(--quote);border-left:3px solid var(--line);padding:8px 12px;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow:auto;font-size:14px}
+.draft{white-space:pre-wrap;word-break:break-word;font-size:14px}
+textarea{width:100%;box-sizing:border-box;min-height:160px;font:inherit;font-size:16px;line-height:1.7;padding:10px 12px;border:1px solid var(--accent);border-radius:8px;background:var(--surface);color:var(--ink);resize:vertical}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+button{font:inherit;font-size:14px;font-weight:700;padding:10px 16px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;min-height:44px}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button.ghost{color:var(--muted)}
+button.small{font-size:13px;padding:6px 12px;min-height:36px}
+button:disabled{opacity:.5;cursor:default}
+.confirm{background:var(--accent-soft);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;font-size:14px}
+.status{font-size:12px;font-weight:700;padding:5px 10px;border-radius:6px;align-self:flex-start}
+.status.wait{background:var(--warn-soft);color:var(--warn)}.status.ok{background:var(--ok-soft);color:var(--ok)}.status.bad{background:var(--bad-soft);color:var(--bad)}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:12px;padding:22px 16px;color:var(--muted);text-align:center;font-size:14px}
+details summary{cursor:pointer;color:var(--muted);font-size:13px;font-weight:700;padding:6px 0}
+details .list{margin-top:10px}
+.done .comment{max-height:80px}
+.notice{font-size:13px;color:var(--muted)}.notice.bad{color:var(--bad)}
+a.link{color:var(--muted);font-size:12px}
+button.danger{background:var(--bad);color:#fff;border-color:var(--bad)}
+.hint{font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.locked{max-width:480px;margin:30vh auto 0;padding:0 16px;text-align:center;color:var(--muted);font-size:15px}
+</style>
+<script src="config.js"></script>
 </head>
 <body>
-<div><img src="icon-192.png" alt=""><h1>神社カフェ 返信ボード</h1><p>準備中です。まもなく使えるようになります。</p></div>
+<div class="wrap" id="app" hidden>
+  <header>
+    <img alt="" id="logo" src="apple-touch-icon.png">
+    <div class="grow"><h1 id="title">返信ボード</h1><p id="patrol">コメントと返信の下書きがここに並びます</p></div>
+    <button class="ghost small" id="reload" type="button">更新</button>
+  </header>
+  <div class="tabs" id="tabs"></div>
+  <div class="counts" id="counts"></div>
+  <div id="notice" class="notice" hidden></div>
+  <section><h2>返信する</h2><div class="list" id="todo"><div class="empty">読み込み中…</div></div></section>
+  <section id="busySec" hidden><h2>投稿中</h2><div class="list" id="busy"></div></section>
+  <details id="doneSec"><summary id="doneSum">済み</summary><div class="list" id="done"></div></details>
+  <details id="blockSec"><summary id="blockSum">ブロック一覧</summary><div class="list" id="blocks"></div></details>
+  <div class="hint" id="hint" hidden>スマホのホーム画面に置くには：Safariの共有ボタン →「ホーム画面に追加」。Androidはメニュー →「ホーム画面に追加」。</div>
+</div>
+
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const LOCKED="このリンクでは開けません。谷口さんにリンクをもらってください";
+  const API=String(window.BOARD_API||"").trim();
+  const KEY_STORE="replyBoard.k";
+  const BY="ボード";
+  const ui={}; let docs=[], blocks=[], cfg={}, SRC={}, filter="すべて", K="", loading=false, pending=false, helloDone=false, timer=null;
+  const TODO=["未対応"], BUSY=["投稿待ち","投稿中","失敗"], DONE=["投稿済み","投稿しない","ブロック"];
+  const akey=d=>(d.source||"")+"|"+String(d.authorId||d.author||"").trim().toLowerCase();
+  const blockOf=d=>blocks.find(b=>b.key===akey(d)&&b.status!=="解除済み");
+  function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+  function color(s){s=String(s||"").trim();return /^#[0-9a-fA-F]{3,8}$/.test(s)?s:""}
+  function jst(){return new Date(Date.now()+9*3600e3).toISOString().slice(0,16).replace("T"," ")}
+  function fnv(s){let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0}return h.toString(16).padStart(8,"0")}
+  function days(d){if(!d)return null;const t=new Date(d.length<=10?d+"T00:00:00+09:00":d);if(isNaN(t))return null;return Math.floor((Date.now()-t)/86400000)}
+  function notice(m,bad){const n=$("notice");n.textContent=m||"";n.className="notice"+(bad?" bad":"");n.hidden=!m}
+  function vis(list){return filter==="すべて"?list:list.filter(d=>d.source===filter)}
+  function storeName(){return String(cfg.storeName||"").trim()}
+
+  // ───── 鍵（URL の ?k=） ─────
+  function readKey(){
+    const u=new URL(location.href); let k=(u.searchParams.get("k")||"").trim();
+    if(k){try{localStorage.setItem(KEY_STORE,k)}catch(e){}return k}
+    // 以前この端末で正しいリンクを開いていれば、それを使います（ホーム画面から ?k= が落ちたとき用）
+    try{k=localStorage.getItem(KEY_STORE)||""}catch(e){}
+    if(k){u.searchParams.set("k",k);history.replaceState(null,"",u.toString())}
+    return k;
+  }
+  function locked(){
+    try{localStorage.removeItem(KEY_STORE)}catch(e){}
+    if(timer)clearInterval(timer);
+    document.body.innerHTML=`<div class="locked">${esc(LOCKED)}</div>`;
+  }
+
+  // ───── API ─────
+  async function apiGet(params){
+    const u=new URL(API); Object.entries(params).forEach(([a,b])=>u.searchParams.set(a,b)); u.searchParams.set("k",K);
+    const r=await fetch(u.toString(),{cache:"no-store"}); return r.json();
+  }
+  async function apiPost(body){
+    const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(Object.assign({},body,{k:K}))});
+    return r.json();
+  }
+  function merge(results){
+    (results||[]).forEach(x=>{if(!x.row)return;const list=x.col==="blocks"?blocks:docs;const i=list.findIndex(o=>o.id===x.id);if(i>=0)list[i]=x.row;else list.unshift(x.row)});
+  }
+  async function write(body,okMsg){
+    let res;
+    try{res=await apiPost(body)}catch(e){notice("保存できませんでした。電波のよい所でもう一度押してください。",true);return false}
+    if(res.ok){merge(res.results||[res]);render();if(okMsg)notice(okMsg);load();return true}
+    if(res.code===401){locked();return false}
+    if(res.code===409){notice("ほかの人が先に書き換えていました。最新の内容にしました。もう一度確かめてください。",true);await load();return false}
+    notice("保存できませんでした："+(res.error||"理由が分かりません"),true);return false;
+  }
+  async function load(){
+    if(loading)return; loading=true;
+    try{
+      const res=await apiGet({api:"board",limit:500});
+      if(!res.ok){if(res.code===401){locked();return}throw new Error(res.error||"")}
+      docs=res.items||[]; blocks=res.blocks||[]; applyConfig(res.config||{});
+      if(editing())pending=true; else render();
+      if(!helloDone){helloDone=true;const page=location.origin+location.pathname;if(location.protocol==="https:"&&cfg.pageUrl!==page)apiPost({api:"hello",page}).catch(()=>{})}
+    }catch(e){
+      if(!docs.length)$("todo").innerHTML=`<div class="empty">読み込めませんでした。電波のよい所で「更新」を押してください。</div>`;
+      else notice("読み込めませんでした。電波のよい所で「更新」を押してください。",true);
+    }finally{loading=false}
+  }
+  function editing(){const a=document.activeElement;return !!(a&&a.matches&&a.matches("textarea[data-id]"))}
+
+  // ───── 店の設定（config シート） ─────
+  function applyConfig(c){
+    cfg=c; const name=storeName(); const title=name?name+" 返信ボード":"返信ボード";
+    document.title=title; $("title").textContent=title;
+    const logo=String(c.logoUrl||"").trim()||"apple-touch-icon.png"; if($("logo").getAttribute("src")!==logo)$("logo").setAttribute("src",logo);
+    const col=color(c.themeColor); if(col){document.documentElement.style.setProperty("--brand",col);$("themeMeta").setAttribute("content",col)}
+    SRC={}; (Array.isArray(c.sources)?c.sources:[]).forEach(s=>{if(s&&s.name)SRC[s.name]=s});
+    const p=c.patrol; if(p&&typeof p==="object"&&p.lastRun)$("patrol").textContent=`最後の巡回：${p.lastRun}　${p.status&&p.status!=="OK"?"止まりました："+p.status:"OK"}`;
+  }
+  function srcChip(name){
+    const s=SRC[name]||{}; const bg=color(s.bg), fg=color(s.fg);
+    const st=bg?` style="background:${bg};${fg?"color:"+fg+";":""}border-color:transparent"`:"";
+    return `<span class="src"${st}>${esc(name||"")}</span>`;
+  }
+  function srcOrder(a,b){const o=Object.keys(SRC);const ia=o.indexOf(a),ib=o.indexOf(b);return (ia<0?999:ia)-(ib<0?999:ib)}
+
+  // ───── 描画（board.html と同じ） ─────
+  function render(){
+    pending=false;
+    const docsAll=docs; docs=docsAll.filter(d=>!blockOf(d)||d.status==="ブロック");
+    renderBlocks();
+    const srcs=["すべて",...[...new Set(docs.map(d=>d.source).filter(Boolean))].sort(srcOrder)];
+    if(!srcs.includes(filter))filter="すべて";
+    $("tabs").innerHTML=srcs.map(s=>{const n=docs.filter(d=>(s==="すべて"||d.source===s)&&TODO.includes(d.status||"未対応")).length;return `<button class="tab ${s===filter?'on':''}" data-tab="${esc(s)}">${esc(s)}${n?' '+n:''}</button>`}).join("");
+    const todo=vis(docs.filter(d=>TODO.includes(d.status||"未対応"))), busy=vis(docs.filter(d=>BUSY.includes(d.status))), done=vis(docs.filter(d=>DONE.includes(d.status)));
+    $("counts").innerHTML=`<span class="chip ${todo.length?'on':''}">返信する ${todo.length}</span><span class="chip">投稿中 ${busy.length}</span><span class="chip">済み ${done.length}</span>`;
+    $("todo").innerHTML=todo.length?todo.map(cardTodo).join(""):`<div class="empty">返信が必要なコメントはありません。<br>新しいコメントは次の巡回で入ります。</div>`;
+    $("busySec").hidden=!busy.length; $("busy").innerHTML=busy.map(cardBusy).join("");
+    $("doneSum").textContent=`済み（${done.length}件）`; $("done").innerHTML=done.map(cardDone).join("")||`<div class="empty">まだありません</div>`;
+    docs=docsAll;
+  }
+  function renderBlocks(){
+    const live=blocks.filter(b=>b.status!=="解除済み");
+    $("blockSum").textContent=`ブロック一覧（${live.length}件）`;
+    $("blocks").innerHTML=live.length?live.map(b=>`<article class="card done"><div class="meta">${srcChip(b.source)}<span class="who">${esc(b.author)}</span><span class="status ${b.status==="ブロック待ち"||b.status==="解除待ち"?"wait":b.status==="ブロック失敗"?"bad":""}">${esc(b.level==="アプリ"?"アプリ内ブロック":"サイトのみブロック")}・${esc(b.status)}${b.error?"："+esc(b.error):""}</span></div>${b.reason?`<div class="label">理由：${esc(b.reason)}</div>`:""}<div class="actions">${b.level==="サイト"?`<button class="ghost" data-bact="toapp" data-bid="${esc(b.id)}">アプリ内ブロックに上げる</button>`:""}<button class="ghost" data-bact="unblock" data-bid="${esc(b.id)}">解除</button></div></article>`).join(""):`<div class="empty">ブロックした人はいません</div>`;
+  }
+  function meta(d){
+    const n=days(d.commentDate); const late=n!=null&&n>=2?`<span class="late">${n}日経過</span>`:(n!=null?`<span>${n===0?"今日":n+"日前"}</span>`:"");
+    const r=Math.max(0,Math.min(5,parseInt(d.rating,10)||0));
+    const stars=r?`<span class="stars">${"★".repeat(r)}${"☆".repeat(5-r)}</span>`:"";
+    const link=/^https?:\/\//.test(d.postUrl||"")?`<a class="link" href="${esc(d.postUrl)}" target="_blank" rel="noopener noreferrer">元の投稿を開く</a>`:"";
+    return `<div class="meta">${srcChip(d.source)}<span class="who">${esc(d.author||"")}</span>${stars}<span>${esc(d.commentDate||"")}</span>${late}${link}</div>`;
+  }
+  function comment(d){
+    const me=storeName()||"お店";
+    const th=Array.isArray(d.thread)&&d.thread.length?`<details><summary>これまでのやりとり（${d.thread.length}件）</summary><div class="thread">${d.thread.map(t=>`<div class="t ${t.mine?"mine":""}"><b>${esc(t.mine?me:(t.author||""))}</b> ${esc(t.date||"")}<br>${esc(t.text||"")}</div>`).join("")}</div></details>`:"";
+    const lab=d.source==="Google口コミ"?"口コミ":d.source==="メール"?"メール本文":"コメント";
+    return `<div><div class="label">${lab}${d.postTitle?"（"+esc(d.postTitle)+"）":""}${d.isFollowup?"　<span class=\"src\">追加コメント</span>":""}</div>${th}<div class="comment">${esc(d.comment)}</div></div>`}
+  function cardTodo(d){
+    const s=ui[d.id]||{mode:"view"}; let body;
+    if(s.mode==="edit") body=`<div><div class="label">返信文を直す</div><textarea id="ta-${esc(d.id)}" data-id="${esc(d.id)}">${esc(s.text??d.draft)}</textarea></div><div class="actions"><button class="primary" data-act="ask" data-id="${esc(d.id)}" data-from="edit">投稿</button><button class="ghost" data-act="cancel" data-id="${esc(d.id)}">やめる</button></div>`;
+    else if(s.mode==="confirm") body=`<div><div class="label">この文で投稿します</div><div class="draft">${esc(s.text)}</div></div><div class="confirm"><span>${esc(d.source)}の${esc(d.author)}さんに、Claudeがこの文を返信します（1時間以内）。</span><div class="actions"><button class="primary" data-act="post" data-id="${esc(d.id)}">投稿する</button><button class="ghost" data-act="back" data-id="${esc(d.id)}">戻る</button></div></div>`;
+    else if(s.mode==="skip") body=`<div><div class="label">返信文（下書き）</div><div class="draft">${esc(d.draft)}</div></div><div class="confirm"><span>このコメントには返信しません。次からは出ません。</span><div class="actions"><button class="primary" data-act="skipok" data-id="${esc(d.id)}">投稿しない</button><button class="ghost" data-act="cancel" data-id="${esc(d.id)}">戻る</button></div></div>`;
+    else if(s.mode==="block") body=`<div class="confirm"><span><b>サイトのみブロック</b>：この人のコメントはこのボードに出なくなります（返信もしません）。相手には何も起きません。<br><b>アプリ内ブロック</b>：${esc(d.source)}で実際にブロックします（Claudeが作業）。相手はコメントできなくなります。</span><div class="actions"><button data-act="blocksite" data-id="${esc(d.id)}">サイトのみブロック</button><button class="danger" data-act="blockapp" data-id="${esc(d.id)}">アプリ内ブロック</button><button class="ghost" data-act="cancel" data-id="${esc(d.id)}">戻る</button></div></div>`;
+    else body=`<div><div class="label">返信文（下書き）</div><div class="draft">${esc(d.draft)}</div></div><div class="actions"><button class="primary" data-act="ask" data-id="${esc(d.id)}" data-from="view">投稿</button><button data-act="edit" data-id="${esc(d.id)}">編集</button><button class="ghost" data-act="skip" data-id="${esc(d.id)}">投稿しない</button><button class="ghost" data-act="block" data-id="${esc(d.id)}">ブロック</button></div>`;
+    if(d.blockSuggest&&s.mode!=="block") body=`<div class="notice bad">Claudeの判断：<b>アプリ内ブロック推奨</b>${d.blockReason?"　理由："+esc(d.blockReason):""}<div class="actions"><button class="danger" data-act="blockapp" data-id="${esc(d.id)}">アプリ内ブロック</button><button data-act="blocksite" data-id="${esc(d.id)}">サイトのみブロック</button><button class="ghost" data-act="skip" data-id="${esc(d.id)}">ブロックしない</button></div></div>`+body;
+    if(d.note) body+=`<div class="notice">メモ：${esc(d.note)}</div>`;
+    return `<article class="card">${meta(d)}${comment(d)}${body}</article>`;
+  }
+  function cardBusy(d){
+    let st; if(d.status==="失敗") st=`<span class="status bad">投稿できませんでした：${esc(d.error||"理由不明")}</span>`; else if(d.status==="投稿中") st=`<span class="status wait">投稿しています…</span>`; else st=`<span class="status wait">投稿待ち（Claudeが1時間以内に投稿します）</span>`;
+    const retry=d.status==="失敗"?`<div class="actions"><button class="primary" data-act="retry" data-id="${esc(d.id)}">もう一度</button><button class="ghost" data-act="toedit" data-id="${esc(d.id)}">返信するに戻す</button></div>`:"";
+    return `<article class="card">${meta(d)}${st}<div><div class="label">投稿する文</div><div class="draft">${esc(d.finalText)}</div></div>${retry}</article>`;
+  }
+  function cardDone(d){
+    const st=d.status==="投稿済み"?`<span class="status ok">投稿済み ${esc(d.doneAt||"")}${d.repliedBy?"（"+esc(d.repliedBy)+"）":""}</span>`:d.status==="ブロック"?`<span class="status bad">ブロック（${esc(d.blockLevel==="アプリ"?"アプリ内":"サイトのみ")}） ${esc(d.doneAt||"")}</span>`:`<span class="status">投稿しない ${esc(d.doneAt||"")}</span>`;
+    return `<article class="card done">${meta(d)}${comment(d)}${st}${d.status==="投稿済み"?`<div class="draft">${esc(d.finalText)}</div>`:""}</article>`;
+  }
+
+  // ───── ボタン ─────
+  document.addEventListener("click",async ev=>{
+    const b=ev.target.closest("button[data-bact]"); if(!b)return; const bl=blocks.find(x=>x.id===b.dataset.bid); if(!bl)return;
+    const now=new Date().toISOString();
+    if(b.dataset.bact==="unblock"){
+      if(!confirm(`${bl.author}さんのブロックを解除しますか？`))return;
+      b.disabled=true;
+      const ok=bl.level==="アプリ"&&bl.status==="ブロック済み"
+        ?await write({api:"update",col:"blocks",id:bl.id,ifVersion:bl.version,data:{status:"解除待ち",requestedAt:now,requestedBy:BY}},"受け付けました。Claudeが1時間以内に解除します。")
+        :await write({api:"update",col:"blocks",id:bl.id,ifVersion:bl.version,data:{status:"解除済み",doneAt:jst()}},"解除しました。");
+      if(!ok)b.disabled=false;
+    } else if(b.dataset.bact==="toapp"){
+      if(!confirm(`${bl.author}さんを${bl.source}で実際にブロックします。よろしいですか？`))return;
+      b.disabled=true;
+      const ok=await write({api:"update",col:"blocks",id:bl.id,ifVersion:bl.version,data:{level:"アプリ",status:"ブロック待ち",requestedAt:now,requestedBy:BY,error:""}},"受け付けました。Claudeが1時間以内にブロックします。");
+      if(!ok)b.disabled=false;
+    }
+  });
+  document.addEventListener("click",async ev=>{
+    const t=ev.target.closest(".tab"); if(t){filter=t.dataset.tab;render();return}
+    const b=ev.target.closest("button[data-act]"); if(!b)return;
+    const id=b.dataset.id, act=b.dataset.act, d=docs.find(x=>x.id===id); if(!d)return;
+    const s=ui[id]||(ui[id]={mode:"view"});
+    if(act==="edit"){s.mode="edit";s.text=s.text??d.draft;render();$("ta-"+id)?.focus();return}
+    if(act==="cancel"){ui[id]={mode:"view"};render();return}
+    if(act==="back"){s.mode=s.from==="edit"?"edit":"view";render();return}
+    if(act==="skip"){s.mode="skip";render();return}
+    if(act==="block"){s.mode="block";render();return}
+    if(act==="ask"){ if(b.dataset.from==="edit"){const ta=$("ta-"+id);s.text=ta?ta.value:s.text;s.from="edit"}else{s.text=d.draft;s.from="view"} if(!String(s.text||"").trim()){notice("返信文が空です。",true);return} s.mode="confirm";render();return }
+    b.disabled=true; notice("");
+    const now=new Date().toISOString(); let ok=false;
+    const upd=(data,msg)=>write({api:"update",col:"items",id,ifVersion:d.version,data},msg);
+    if(act==="post") ok=await upd({status:"投稿待ち",finalText:s.text,edited:s.from==="edit",requestedAt:now,requestedBy:BY,error:""},"受け付けました。Claudeが1時間以内に投稿します。");
+    else if(act==="skipok") ok=await upd({status:"投稿しない",doneAt:jst(),doneBy:BY});
+    else if(act==="retry") ok=await upd({status:"投稿待ち",requestedAt:now},"受け付けました。Claudeが1時間以内に投稿します。");
+    else if(act==="toedit") ok=await upd({status:"未対応",draft:d.finalText||d.draft});
+    else if(act==="blocksite"||act==="blockapp"){
+      const level=act==="blockapp"?"アプリ":"サイト"; const key=akey(d); const old=blocks.find(x=>x.key===key);
+      const data={key,source:d.source||"",author:d.author||"",authorId:d.authorId||"",authorUrl:d.authorUrl||"",postUrl:d.postUrl||"",level,status:level==="アプリ"?"ブロック待ち":"ブロック済み",reason:d.blockReason||"",fromItem:d.id,requestedAt:now,requestedBy:BY,doneAt:"",error:""};
+      const bw=old?{op:"update",col:"blocks",id:old.id,ifVersion:old.version,data}:{op:"set",col:"blocks",id:"b-"+fnv(key)+"-"+Date.now().toString(36),data};
+      ok=await write({api:"batch",writes:[bw,{op:"update",col:"items",id,ifVersion:d.version,data:{status:"ブロック",doneAt:jst(),doneBy:BY,blockLevel:level}}]},
+        level==="アプリ"?`受け付けました。Claudeが1時間以内に${d.source}でブロックします。`:"この人はボードに出なくなりました。");
+    }
+    if(ok){delete ui[id];render()} else b.disabled=false;
+  });
+  document.addEventListener("input",ev=>{const ta=ev.target.closest("textarea[data-id]");if(!ta)return;(ui[ta.dataset.id]||={mode:"edit"}).text=ta.value});
+  document.addEventListener("focusout",()=>{setTimeout(()=>{if(pending&&!editing())render()},0)});
+
+  // ───── はじめ ─────
+  K=readKey();
+  if(!K){locked();return}
+  $("app").hidden=false;
+  const standalone=window.matchMedia("(display-mode: standalone)").matches||navigator.standalone; $("hint").hidden=!!standalone;
+  if(!API){$("todo").innerHTML=`<div class="empty">まだ準備中です（config.js に Apps Script のURLが入っていません）。</div>`;return}
+  $("reload").addEventListener("click",()=>{notice("");load()});
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden)load()});
+  timer=setInterval(()=>{if(!document.hidden)load()},30000);
+  load();
+})();
+</script>
 </body>
 </html>
