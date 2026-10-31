@@ -110,7 +110,7 @@ button.danger{background:var(--bad);color:#fff;border-color:var(--bad)}
   const KEY_STORE="replyBoard.k";
   const BY="ボード";
   const ui={}; let docs=[], blocks=[], cfg={}, SRC={}, filter="すべて", K="", loading=false, pending=false, helloDone=false, timer=null;
-  const TODO=["未対応"], BUSY=["投稿待ち","投稿中","失敗"], DONE=["投稿済み","投稿しない","ブロック"];
+  const TODO=["未対応"], BUSY=["投稿待ち","投稿中","失敗","要確認"], DONE=["投稿済み","投稿しない","ブロック"];
   const akey=d=>(d.source||"")+"|"+String(d.authorId||d.author||"").trim().toLowerCase();
   let allDocs=[];
   function history(d){ // 同じ人（同じ媒体）の他のコメント。古い順
@@ -250,8 +250,12 @@ button.danger{background:var(--bad);color:#fff;border-color:var(--bad)}
     const stale=waitedMin!=null&&waitedMin>=75;
     let st; if(d.status==="失敗") st=`<span class="status bad">投稿できませんでした：${esc(d.error||"理由不明")}</span>`;
     else if(stale) st=`<span class="status bad">まだ投稿されていません（${waitedMin>=120?Math.floor(waitedMin/60)+"時間":waitedMin+"分"}経過）。Claudeの巡回が止まっています。Macが起きていてClaudeアプリが開いているか確認してください</span>`;
+    else if(d.status==="要確認") st=`<span class="status bad">投稿を止めています：${esc(d.error||"内容を確認してください")}</span>`;
     else if(d.status==="投稿中") st=`<span class="status wait">投稿しています…</span>`; else st=`<span class="status wait">投稿待ち（Claudeが1時間以内に投稿します）</span>`;
-    const retry=(d.status==="失敗"||stale)?`<div class="actions"><button class="primary" data-act="retry" data-id="${esc(d.id)}">もう一度</button><button class="ghost" data-act="toedit" data-id="${esc(d.id)}">返信するに戻す</button></div>`:"";
+    let retry="";
+    if(d.status==="要確認") retry=`<div class="actions"><button class="primary" data-act="toedit" data-id="${esc(d.id)}">直す</button><button class="ghost" data-act="retry" data-id="${esc(d.id)}">このまま投稿</button></div>`;
+    else if(d.status==="失敗"||stale) retry=`<div class="actions"><button class="primary" data-act="retry" data-id="${esc(d.id)}">もう一度</button><button class="ghost" data-act="toedit" data-id="${esc(d.id)}">返信するに戻す</button></div>`;
+    else if(d.status==="投稿待ち") retry=`<div class="actions"><button class="ghost" data-act="toedit" data-id="${esc(d.id)}">取り消して直す</button></div>`;
     return `<article class="card">${meta(d)}${st}<div><div class="label">投稿する文</div><div class="draft">${esc(d.finalText)}</div></div>${retry}</article>`;
   }
   function cardDone(d){
