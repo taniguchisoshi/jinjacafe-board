@@ -172,7 +172,7 @@ button.danger{background:var(--bad);color:#fff;border-color:var(--bad)}
     const logo=String(c.logoUrl||"").trim()||"apple-touch-icon.png"; if($("logo").getAttribute("src")!==logo)$("logo").setAttribute("src",logo);
     const col=color(c.themeColor); if(col){document.documentElement.style.setProperty("--brand",col);$("themeMeta").setAttribute("content",col)}
     SRC={}; (Array.isArray(c.sources)?c.sources:[]).forEach(s=>{if(s&&s.name)SRC[s.name]=s});
-    const p=c.patrol; if(p&&typeof p==="object"&&p.lastRun)$("patrol").textContent=`最後の巡回：${p.lastRun}　${p.status&&p.status!=="OK"?"止まりました："+p.status:"OK"}`;
+    const p=c.patrol; if(p&&typeof p==="object"&&p.lastRun){const bad=p.status&&p.status!=="OK";$("patrol").textContent=`最後の巡回：${p.lastRun}　${bad?"止まりました："+p.status:"OK"}`;$("patrol").style.color=bad?"var(--bad)":"";}
   }
   function srcChip(name){
     const s=SRC[name]||{}; const bg=color(s.bg), fg=color(s.fg);
@@ -225,8 +225,12 @@ button.danger{background:var(--bad);color:#fff;border-color:var(--bad)}
     return `<article class="card">${meta(d)}${comment(d)}${body}</article>`;
   }
   function cardBusy(d){
-    let st; if(d.status==="失敗") st=`<span class="status bad">投稿できませんでした：${esc(d.error||"理由不明")}</span>`; else if(d.status==="投稿中") st=`<span class="status wait">投稿しています…</span>`; else st=`<span class="status wait">投稿待ち（Claudeが1時間以内に投稿します）</span>`;
-    const retry=d.status==="失敗"?`<div class="actions"><button class="primary" data-act="retry" data-id="${esc(d.id)}">もう一度</button><button class="ghost" data-act="toedit" data-id="${esc(d.id)}">返信するに戻す</button></div>`:"";
+    const waitedMin=d.requestedAt?Math.floor((Date.now()-new Date(d.requestedAt))/60000):null;
+    const stale=waitedMin!=null&&waitedMin>=75;
+    let st; if(d.status==="失敗") st=`<span class="status bad">投稿できませんでした：${esc(d.error||"理由不明")}</span>`;
+    else if(stale) st=`<span class="status bad">まだ投稿されていません（${waitedMin>=120?Math.floor(waitedMin/60)+"時間":waitedMin+"分"}経過）。Claudeの巡回が止まっています。Macが起きていてClaudeアプリが開いているか確認してください</span>`;
+    else if(d.status==="投稿中") st=`<span class="status wait">投稿しています…</span>`; else st=`<span class="status wait">投稿待ち（Claudeが1時間以内に投稿します）</span>`;
+    const retry=(d.status==="失敗"||stale)?`<div class="actions"><button class="primary" data-act="retry" data-id="${esc(d.id)}">もう一度</button><button class="ghost" data-act="toedit" data-id="${esc(d.id)}">返信するに戻す</button></div>`:"";
     return `<article class="card">${meta(d)}${st}<div><div class="label">投稿する文</div><div class="draft">${esc(d.finalText)}</div></div>${retry}</article>`;
   }
   function cardDone(d){
