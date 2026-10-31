@@ -236,10 +236,12 @@ function cleanData_(data) {
   if (data === undefined || data === null) return { fields: {} };
   if (typeof data !== "object" || Array.isArray(data)) return { error: "data はオブジェクトで送ってください" };
   const fields = {};
-  for (const k of Object.keys(data)) {
+  const ALIAS = { src: "source", dm: "isDM" }; // 書き間違えやすい項目名を正しい名前に直します
+  for (const k0 of Object.keys(data)) {
+    const k = ALIAS[k0] || k0;
     if (k === "id" || k === "version") continue;
     if (!/^[A-Za-z][A-Za-z0-9_]{0,40}$/.test(k)) return { error: "項目名が違います：" + k };
-    fields[k] = toText_(data[k]); // シートから読んだ行と同じ「文字」の形にそろえます
+    fields[k] = toText_(data[k0]); // シートから読んだ行と同じ「文字」の形にそろえます
   }
   return { fields: fields };
 }
