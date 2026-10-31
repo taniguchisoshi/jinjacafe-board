@@ -54,6 +54,8 @@ h2{font-size:12px;letter-spacing:.08em;color:var(--muted);margin:6px 0 0;font-we
 .badge{font-size:11px;font-weight:700;padding:1px 8px;border-radius:999px;border:1px solid transparent}
 .badge.first{background:var(--accent-soft);color:var(--accent)}
 .badge.rep{background:var(--ok-soft);color:var(--ok)}
+.badge.dm{background:#5b2a86;color:#fff}
+.dmnote{font-size:13px;color:var(--bad);font-weight:700;margin:4px 0}
 .hist{border-left:3px solid var(--line);padding:0 0 0 12px;display:flex;flex-direction:column;gap:8px;font-size:13px;margin-top:6px}
 .hist .h{color:var(--muted);white-space:pre-wrap;word-break:break-word}
 .hist .h b{color:var(--ink)}
@@ -227,17 +229,17 @@ button.danger{background:var(--bad);color:#fff;border-color:var(--bad)}
     const r=Math.max(0,Math.min(5,parseInt(d.rating,10)||0));
     const stars=r?`<span class="stars">${"★".repeat(r)}${"☆".repeat(5-r)}</span>`:"";
     const link=/^https?:\/\//.test(d.postUrl||"")?`<a class="link" href="${esc(d.postUrl)}" target="_blank" rel="noopener noreferrer">元の投稿を開く</a>`:"";
-    return `<div class="meta">${srcChip(d.source)}<span class="who">${esc(d.author||"")}</span>${visitBadge(d)}${stars}<span>${esc(d.commentDate||"")}</span>${late}${link}</div>`;
+    return `<div class="meta">${srcChip(d.source)}${d.isDM?`<span class="badge dm">DM</span>`:""}<span class="who">${esc(d.author||"")}</span>${visitBadge(d)}${stars}<span>${esc(d.commentDate||"")}</span>${late}${link}</div>`;
   }
   function comment(d){
     const me=storeName()||"お店";
     const th=Array.isArray(d.thread)&&d.thread.length?`<details><summary>これまでのやりとり（${d.thread.length}件）</summary><div class="thread">${d.thread.map(t=>`<div class="t ${t.mine?"mine":""}"><b>${esc(t.mine?me:(t.author||""))}</b> ${esc(t.date||"")}<br>${esc(t.text||"")}</div>`).join("")}</div></details>`:"";
-    const lab=d.source==="Google口コミ"?"口コミ":d.source==="メール"?"メール本文":"コメント";
-    return `<div><div class="label">${lab}${d.postTitle?"（"+esc(d.postTitle)+"）":""}${d.isFollowup?"　<span class=\"src\">追加コメント</span>":""}</div>${th}<div class="comment">${esc(d.comment)}</div>${historyBlock(d)}</div>`}
+    const lab=d.isDM?"DM（本人にだけ届く非公開メッセージ）":d.source==="Google口コミ"?"口コミ":d.source==="メール"?"メール本文":"コメント";
+    return `<div>${d.isDM?`<div class="dmnote">DMです。本文のリンクは開かないでください。お金・口座・ログインの話は詐欺の可能性が高いです</div>`:""}<div class="label">${lab}${d.postTitle?"（"+esc(d.postTitle)+"）":""}${d.isFollowup?"　<span class=\"src\">追加コメント</span>":""}</div>${th}<div class="comment">${esc(d.comment)}</div>${historyBlock(d)}</div>`}
   function cardTodo(d){
     const s=ui[d.id]||{mode:"view"}; let body;
     if(s.mode==="edit") body=`<div><div class="label">返信文を直す</div><textarea id="ta-${esc(d.id)}" data-id="${esc(d.id)}">${esc(s.text??d.draft)}</textarea></div><div class="actions"><button class="primary" data-act="ask" data-id="${esc(d.id)}" data-from="edit">投稿</button><button class="ghost" data-act="cancel" data-id="${esc(d.id)}">やめる</button></div>`;
-    else if(s.mode==="confirm") body=`<div><div class="label">この文で投稿します</div><div class="draft">${esc(s.text)}</div></div><div class="confirm"><span>${esc(d.source)}の${esc(d.author)}さんに、Claudeがこの文を返信します（1時間以内）。</span><div class="actions"><button class="primary" data-act="post" data-id="${esc(d.id)}">投稿する</button><button class="ghost" data-act="back" data-id="${esc(d.id)}">戻る</button></div></div>`;
+    else if(s.mode==="confirm") body=`<div><div class="label">この文で投稿します</div><div class="draft">${esc(s.text)}</div></div><div class="confirm"><span>${esc(d.source)}の${esc(d.author)}さんに、Claudeがこの文を${d.isDM?"DMで":""}返信します（1時間以内）。</span><div class="actions"><button class="primary" data-act="post" data-id="${esc(d.id)}">投稿する</button><button class="ghost" data-act="back" data-id="${esc(d.id)}">戻る</button></div></div>`;
     else if(s.mode==="skip") body=`<div><div class="label">返信文（下書き）</div><div class="draft">${esc(d.draft)}</div></div><div class="confirm"><span>このコメントには返信しません。この人から次にコメントが来たら、また出ます。</span><div class="actions"><button class="primary" data-act="skipok" data-id="${esc(d.id)}">投稿しない</button><button class="ghost" data-act="cancel" data-id="${esc(d.id)}">戻る</button></div></div>`;
     else if(s.mode==="block") body=`<div class="confirm"><span><b>サイトのみブロック</b>：この人のコメントはこのボードに出なくなります（返信もしません）。相手には何も起きません。<br><b>アプリ内ブロック</b>：${esc(d.source)}で実際にブロックします（Claudeが作業）。相手はコメントできなくなります。</span><div class="actions"><button data-act="blocksite" data-id="${esc(d.id)}">サイトのみブロック</button><button class="danger" data-act="blockapp" data-id="${esc(d.id)}">アプリ内ブロック</button><button class="ghost" data-act="cancel" data-id="${esc(d.id)}">戻る</button></div></div>`;
     else body=`<div><div class="label">返信文（下書き）</div><div class="draft">${esc(d.draft)}</div></div><div class="actions"><button class="primary" data-act="ask" data-id="${esc(d.id)}" data-from="view">投稿</button><button data-act="edit" data-id="${esc(d.id)}">編集</button><button class="ghost" data-act="skip" data-id="${esc(d.id)}">投稿しない</button><button class="ghost" data-act="block" data-id="${esc(d.id)}">ブロック</button></div>`;
