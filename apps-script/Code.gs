@@ -1,5 +1,5 @@
 /**
- * @OnlyCurrentDoc
+ * スプレッドシートに紐づいたプロジェクトでも、独立したプロジェクト（StoreSeed.gs の SHEET_ID を使う）でも動きます。
  *
  * 返信ボード API（Google Apps Script）
  * - 画面は GitHub Pages（github-pages/index.html）。ここは JSON を返す API だけです。
@@ -120,7 +120,7 @@ function doPost(e) {
 // ───────── 準備（谷口さんが1回だけ実行） ─────────
 
 function setup() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = ss_();
   if (!ss) throw new Error("スプレッドシートの「拡張機能 → Apps Script」から開いたプロジェクトで実行してください。");
   ensureSheet_("items");
   ensureSheet_("blocks");
@@ -324,7 +324,7 @@ function rowOut_(col, obj) {
 // ───────── config ─────────
 
 function readConfig_() {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG_SHEET);
+  const sheet = ss_().getSheetByName(CONFIG_SHEET);
   const out = {};
   if (!sheet || sheet.getLastRow() < 2) return out;
   sheet.getRange(2, 1, sheet.getLastRow() - 1, 2).getDisplayValues().forEach(r => {
@@ -389,7 +389,7 @@ function hello_(page) {
 // ───────── シート ─────────
 
 function ensureSheet_(col) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = ss_();
   let sheet = ss.getSheetByName(col);
   if (!sheet) sheet = ss.insertSheet(col);
   const want = SHEETS[col];
@@ -407,7 +407,7 @@ function ensureSheet_(col) {
 }
 
 function ensureConfigSheet_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = ss_();
   let sheet = ss.getSheetByName(CONFIG_SHEET);
   if (!sheet) sheet = ss.insertSheet(CONFIG_SHEET);
   if (sheet.getRange(1, 1).getDisplayValue() !== "key") {
@@ -455,4 +455,13 @@ function json_(o) {
 
 function text_(s) {
   return ContentService.createTextOutput(s).setMimeType(ContentService.MimeType.TEXT);
+}
+
+/** スプレッドシート本体。紐づいたプロジェクトならそれ、独立したプロジェクトなら StoreSeed.gs の SHEET_ID で開きます。 */
+function ss_() {
+  const a = SpreadsheetApp.getActiveSpreadsheet();
+  if (a) return a;
+  const id = (typeof SHEET_ID === "string" && SHEET_ID) ? SHEET_ID : (PropertiesService.getScriptProperties().getProperty("SHEET_ID") || "");
+  if (!id) throw new Error("スプレッドシートが見つかりません。StoreSeed.gs の SHEET_ID にスプレッドシートのIDを入れてください。");
+  return SpreadsheetApp.openById(id);
 }

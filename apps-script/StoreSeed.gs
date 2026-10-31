@@ -1,3 +1,6 @@
+/** このスプレッドシートのID（URLの /d/ と /edit の間）。シートに紐づかないプロジェクトで動かすときに使います。 */
+const SHEET_ID = "1gbWOOKZ8GD_fOCJGs2LFME2SZyOnMgWS7sVUPTg1BYE";
+
 /**
  * この店（神社カフェ）の初期値。
  * setup() が config シートの「空いている行」にだけ入れます。入れたあとは config シートが正本です。
