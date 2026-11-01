@@ -195,7 +195,7 @@ button.danger{background:var(--bad);color:#fff;border-color:var(--bad)}
     const logo=String(c.logoUrl||"").trim()||"apple-touch-icon.png"; if($("logo").getAttribute("src")!==logo)$("logo").setAttribute("src",logo);
     const col=color(c.themeColor); if(col){document.documentElement.style.setProperty("--brand",col);$("themeMeta").setAttribute("content",col)}
     SRC={}; (Array.isArray(c.sources)?c.sources:[]).forEach(s=>{if(s&&s.name)SRC[s.name]=s});
-    const p=c.patrol; if(p&&typeof p==="object"&&p.lastRun){const ago=Math.floor((Date.now()-new Date(String(p.lastRun).replace(" ","T")+":00+09:00"))/60000);const stale=ago>=120;const bad=(p.status&&p.status!=="OK")||stale;$("patrol").textContent=`最後の巡回：${p.lastRun}　${stale?"巡回が"+Math.floor(ago/60)+"時間止まっています。Macが起きているか・Claudeアプリが開いているか確認してください":(p.status&&p.status!=="OK")?"止まりました："+p.status:"OK"}`;$("patrol").style.color=bad?"var(--bad)":"";}
+    const p=c.patrol; if(p&&typeof p==="object"&&p.lastRun){const ago=Math.floor((Date.now()-new Date(String(p.lastRun).replace(" ","T")+":00+09:00"))/60000);const stale=ago>=120;const s=String(p.status||"OK");const stopped=/つながらない|止まりました|ログインが切れ|失敗/.test(s)&&!/：OK/.test(s);const bad=stopped||stale;$("patrol").textContent=`最後の巡回：${p.lastRun}　${stale?"巡回が"+Math.floor(ago/60)+"時間止まっています。Macが起きているか・Claudeアプリが開いているか確認してください":stopped?"止まりました："+s:s}`;$("patrol").style.color=bad?"var(--bad)":"";}
   }
   function srcChip(name){
     const s=SRC[name]||{}; const bg=color(s.bg), fg=color(s.fg);
