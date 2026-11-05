@@ -105,6 +105,8 @@ button.danger{background:var(--bad);color:#fff;border-color:var(--bad)}
 </div>
 
 <script>
+const RUN_H=[5,6,8,10,12,14,16,18,20];function jstNow(){return new Date(Date.now()+9*3600e3);}function lastExpectedRun(){const n=jstNow();for(let d=0;d<3;d++){for(let i=RUN_H.length-1;i>=0;i--){const t=new Date(Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate()-d,RUN_H[i],52));if(t<=n)return t;}}return null;}function nextRunLabel(){const n=jstNow();for(let d=0;d<2;d++)for(const h of RUN_H){const t=new Date(Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate()+d,h,52));if(t>n)return (d?"明日":"")+h+":52";}return"";}
+
 (function(){
   const $=id=>document.getElementById(id);
   const LOCKED="このリンクでは開けません。谷口さんにリンクをもらってください";
@@ -195,7 +197,7 @@ button.danger{background:var(--bad);color:#fff;border-color:var(--bad)}
     const logo=String(c.logoUrl||"").trim()||"apple-touch-icon.png"; if($("logo").getAttribute("src")!==logo)$("logo").setAttribute("src",logo);
     const col=color(c.themeColor); if(col){document.documentElement.style.setProperty("--brand",col);$("themeMeta").setAttribute("content",col)}
     SRC={}; (Array.isArray(c.sources)?c.sources:[]).forEach(s=>{if(s&&s.name)SRC[s.name]=s});
-    const p=c.patrol; if(p&&typeof p==="object"&&p.lastRun){const ago=Math.floor((Date.now()-new Date(String(p.lastRun).replace(" ","T")+":00+09:00"))/60000);const jstHour=(new Date().getUTCHours()+9)%24;const daytime=jstHour>=7&&jstHour<=22;const stale=ago>=180&&daytime;const s=String(p.status||"OK");const lines=s.split(/\n/).map(x=>x.trim()).filter(Boolean);const ng=lines.filter(x=>!/：OK/.test(x));const stopped=ng.length>0;const bad=stopped||stale;$("patrol").textContent=`最後の巡回：${p.lastRun}　${stale?"巡回が"+Math.floor(ago/60)+"時間止まっています。Macが起きているか・Claudeアプリが開いているか確認してください":stopped?"エラー："+ng.join(" ／ "):"全サイトOK"}`;$("patrol").style.color=bad?"var(--bad)":"";}
+    const p=c.patrol; if(p&&typeof p==="object"&&p.lastRun){const ago=Math.floor((Date.now()-new Date(String(p.lastRun).replace(" ","T")+":00+09:00"))/60000);const jstHour=(new Date().getUTCHours()+9)%24;const daytime=jstHour>=7&&jstHour<=22;const le=lastExpectedRun();const lastMs=new Date(String(p.lastRun).replace(" ","T")+":00+09:00").getTime();const stale=!!(le&&(jstNow()-le)>40*60e3&&lastMs<(le.getTime()-9*3600e3-5*60e3));const s=String(p.status||"OK");const lines=s.split(/\n/).map(x=>x.trim()).filter(Boolean);const ng=lines.filter(x=>!/：OK/.test(x));const stopped=ng.length>0;const bad=stopped||stale;$("patrol").textContent=`最後の巡回：${p.lastRun}　${stale?"予定の巡回（"+(le?le.getUTCHours():"")+":52）が動いていません。Macが起きているか・Claudeアプリが開いているか確認してください":stopped?"エラー："+ng.join(" ／ "):"全サイトOK"}`;$("patrol").style.color=bad?"var(--bad)":"";}
   }
   function srcChip(name){
     const s=SRC[name]||{}; const bg=color(s.bg), fg=color(s.fg);
@@ -249,11 +251,11 @@ button.danger{background:var(--bad);color:#fff;border-color:var(--bad)}
   }
   function cardBusy(d){
     const waitedMin=d.requestedAt?Math.floor((Date.now()-new Date(d.requestedAt))/60000):null;
-    const stale=waitedMin!=null&&waitedMin>=75;
+    const leR=lastExpectedRun();const stale=!!(waitedMin!=null&&leR&&(jstNow()-leR)>40*60e3&&(Date.now()-waitedMin*60e3)<(leR.getTime()-9*3600e3));
     let st; if(d.status==="失敗") st=`<span class="status bad">投稿できませんでした：${esc(d.error||"理由不明")}</span>`;
     else if(stale) st=`<span class="status bad">まだ投稿されていません（${waitedMin>=120?Math.floor(waitedMin/60)+"時間":waitedMin+"分"}経過）。Claudeの巡回が止まっています。Macが起きていてClaudeアプリが開いているか確認してください</span>`;
     else if(d.status==="要確認") st=`<span class="status bad">投稿を止めています：${esc(d.error||"内容を確認してください")}</span>`;
-    else if(d.status==="投稿中") st=`<span class="status wait">投稿しています…</span>`; else st=`<span class="status wait">投稿待ち（Claudeが1時間以内に投稿します）</span>`;
+    else if(d.status==="投稿中") st=`<span class="status wait">投稿しています…</span>`; else st=`<span class="status wait">投稿待ち（次の巡回 ${nextRunLabel()} ごろに投稿します）</span>`;
     let retry="";
     if(d.status==="要確認") retry=`<div class="actions"><button class="primary" data-act="toedit" data-id="${esc(d.id)}">直す</button><button class="ghost" data-act="retry" data-id="${esc(d.id)}">このまま投稿</button></div>`;
     else if(d.status==="失敗"||stale) retry=`<div class="actions"><button class="primary" data-act="retry" data-id="${esc(d.id)}">もう一度</button><button class="ghost" data-act="toedit" data-id="${esc(d.id)}">返信するに戻す</button></div>`;
